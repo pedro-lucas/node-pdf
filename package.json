@@ -1,0 +1,23 @@
+{
+  "name": "node-pdf",
+  "version": "0.0.1",
+  "description": "Native PDF manipulation",
+  "main": "main.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pedro-lucas/node-pdf.git"
+  },
+  "keywords": [
+    "node-pdf",
+    "pdf"
+  ],
+  "author": "Pedro Lucas da Silva Junior",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pedro-lucas/node-pdf/issues"
+  },
+  "homepage": "https://github.com/pedro-lucas/node-pdf#readme"
+}
