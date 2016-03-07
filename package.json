@@ -2,22 +2,31 @@
   "name": "node-pdf",
   "version": "0.0.1",
   "description": "Native PDF manipulation",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
     "test": "test"
   },
+  "gypfile": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pedro-lucas/node-pdf.git"
+    "url": "https://github.com/pedro-lucas/node-pdf.git"
   },
   "keywords": [
     "node-pdf",
     "pdf"
   ],
-  "author": "Pedro Lucas da Silva Junior",
+  "author": "Pedro Lucas da Silva Junior <pedro@objota.com.br>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/pedro-lucas/node-pdf/issues"
   },
-  "homepage": "https://github.com/pedro-lucas/node-pdf#readme"
+  "homepage": "https://github.com/pedro-lucas/node-pdf#readme",
+  "dependencies": {
+    "nan": "^2.2.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-util": "^3.0.7",
+    "shelljs": "^0.6.0"
+  }
 }
