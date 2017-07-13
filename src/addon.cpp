@@ -12,6 +12,7 @@
 #include <map>
 #include <nan.h>
 #include <ApplicationServices/ApplicationServices.h>
+#include "node_pdf.h"
 
 using v8::Exception;
 using v8::FunctionCallbackInfo;
@@ -102,9 +103,24 @@ void PagesCount(const FunctionCallbackInfo<Value>& args) {
 
 void Create(const FunctionCallbackInfo<Value>& args) {
     
+    Isolate* isolate = args.GetIsolate();
+    
+    if(args.Length() < 1 || !args[0]->IsString()) {
+        isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong argument")));
+        return;
+    }
+    
+//    Local<Object> obj = Object::New(isolate);
+    
+    Local<PDFWrapper> obj = PDFWrapper("teste").handle();
+    
+    args.GetReturnValue().Set(obj);
+    
+    
 }
 
 void Init(Local<Object> exports) {
+    PDFWrapper::Init(exports);
     NODE_SET_METHOD(exports, "check", Check);
     NODE_SET_METHOD(exports, "create", Create);
 }

@@ -12,15 +12,22 @@
 #include <string>
 #include <nan.h>
 
+using std::string;
+
 class PDFWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
-
-    explicit PDFWrapper(std::string path) : _path(path) {  }
-    ~PDFWrapper();
+    PDFWrapper(std::string path) : _path(path) {  }
     
 private:
+    
+    explicit PDFWrapper(double path);
+    ~PDFWrapper();
+
+    static Nan::Persistent<v8::Function> constructor;
+    static NAN_METHOD(New);
+
     std::string _path;
     
 };
