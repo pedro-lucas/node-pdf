@@ -1,21 +1,28 @@
+//
+//  node_pdf.h
+//  node-pdf
+//
+//  Created by Pedro Lucas on 3/5/16.
+//  Copyright © 2016 Appmania. All rights reserved.
+//
+
 #ifndef NODE_PDF_MAIN_INCLUDED
 #define NODE_PDF_MAIN_INCLUDED
 
-#include <node.h>
 #include <string>
 #include <nan.h>
 
-#include "node_pdf_settings.h"
+class PDFWrapper : public Nan::ObjectWrap {
+    
+public:
+    static NAN_MODULE_INIT(Init);
 
-/*
-class PDFWrapper : public node::ObjectWrap {
-
-  private: std::string *s_;
-
-    explicit PDFWrapper(std::string s = "");
+    explicit PDFWrapper(std::string path) : _path(path) {  }
     ~PDFWrapper();
-
-}
-*/
+    
+private:
+    std::string _path;
+    
+};
 
 #endif // NODE_PDF_MAIN_INCLUDED
