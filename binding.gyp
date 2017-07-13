@@ -6,8 +6,8 @@
                 "<!(node -e \"require('nan')\")"
             ],
             'sources': [
-                'src/addon.cc',
-                'src/node_pdf.cc'
+                'src/addon.cpp',
+                'src/node_pdf.cpp'
             ],
             'cflags!': ['-fno-exceptions'],
             'cflags_cc!': ['-fno-exceptions'],
