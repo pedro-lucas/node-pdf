@@ -13,7 +13,7 @@ gulp.task('clear-test', () => {
   .pipe(clean());
 });
 
-gulp.task('compile', shell.task(['node-gyp rebuild']));
+gulp.task('compile', shell.task(['node-gyp build']));
 
 gulp.task('test', ['clear-test'], () => {
   return gulp.src('spec/*-test.js')
