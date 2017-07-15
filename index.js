@@ -1,3 +1,3 @@
-const addon = require('./build/Release/addon');
+const addon = require('./build/Release/node_pdf.node');
 
 module.exports = addon;

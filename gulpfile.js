@@ -1,48 +1,27 @@
-(function() {
-  'use strict';
+const gulp = require('gulp');
+const jasmine = require('gulp-jasmine');
+const clean = require('gulp-clean');
+const filter = require('gulp-filter');
+const sequence = require('run-sequence');
+const shell = require('gulp-shell')
 
-  const gulp = require('gulp');
-  const shell = require('shelljs');
-  const gutil = require('gulp-util');
-  const log = {
-    success: function() {
-      gutil.log(gutil.colors.green(this.format(arguments)));
-    },
-    error: function() {
-      gutil.log(gutil.colors.red(this.format(arguments)));
-    },
-    info: function() {
-      gutil.log(gutil.colors.blue(this.format(arguments)));
-    },
-    format: function(argss) {
-      let args = Array.prototype.slice.call(argss);
-      return args.join(' ');
-    }
-  };
+gulp.task('clear-test', () => {
+  return gulp.src('spec/tmp/*.*', {
+      read: false
+  })
+  .pipe(filter(['*', '!spec/tmp/.gitignore']))
+  .pipe(clean());
+});
 
-  gulp.task('default', function(done) {
+gulp.task('compile', shell.task(['node-gyp build']));
 
-    shell.exec('node-gyp build --debug', {silent: false}, function(code, stdout, stderr) {
-      if(code != 0) {
-        log.error("ERROR:", stderr);
-      }else{
+gulp.task('test', ['clear-test'], () => {
+  return gulp.src('spec/*-test.js')
+  .pipe(jasmine({
+    verbose: true
+  }));
+});
 
-        log.info("addon compiled... wait for execution...");
-
-        const addon = require('./build/Debug/node-pdf');
-
-        log.success(addon.check());
-
-        const pdf1 = addon.open('/Users/Pedro/Desktop/br_163-Guia-em-PDF-para-Fevereiro.pdf');
-        const pdf2 = addon.open('/Users/Pedro/Desktop/certidao/certidao.pdf');
-
-        log.info("pages pdf 1:", addon.pagesCount(pdf1));
-        log.info("pages pdf 2:", addon.pagesCount(pdf2));
-
-      }
-
-    });
-
-  });
-
-})();
+gulp.task('default', done => {
+	sequence('compile', 'test', done);
+});
