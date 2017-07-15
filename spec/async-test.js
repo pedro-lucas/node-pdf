@@ -15,7 +15,14 @@ describe("Native async operations", () => {
     expect(pdf.check()).toEqual("Everything working right!");
   });
 
-});
+  it('Create PDFWrapper', () => {
+    const obj = pdf.create(sample1);
+    expect(obj.isValid()).toBeTruthy();
+  });
 
-// log.info("pages pdf 1:", addon.pagesCount(pdf1));
-// log.info("pages pdf 2:", addon.pagesCount(pdf2));
+  it('PDF pages count', () => {
+    const obj = pdf.create(sample1);
+    expect(obj.count() > 0).toBeTruthy();
+  });
+
+});

@@ -22,13 +22,7 @@
                     'include_dirs': [
                         'System/Library/Frameworks/CoreFoundation.Framework/Headers',
                         'System/Library/Frameworks/ApplicationServices.framework/Headers'
-                    ],
-                    'link_settings': {
-                        'libraries': [
-                            '-framework CoreFoundation',
-                            '-framework ApplicationServices'
-                        ]
-                    }
+                    ]
                 }]
             ]
         }

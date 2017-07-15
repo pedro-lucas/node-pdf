@@ -7,19 +7,95 @@
 //
 
 #include "node_pdf.h"
+#include <unistd.h>
+#include <sys/stat.h>
+#include <string>
 
-using v8::String;
+inline bool PDFWrapper::isValid() {
+    if(_pdf) {
+        return true;
+    }
+    return false;
+}
+
+inline bool file_exists(const std::string& name) {
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0);
+}
+
+Nan::Persistent<v8::Function> PDFWrapper::constructor;
+
+PDFWrapper::~PDFWrapper() {
+    if(_pdf) {
+        CGPDFDocumentRelease(_pdf);
+    }
+}
+
+PDFWrapper::PDFWrapper(std::string path) {
+    
+    _path = path;
+    
+    if(!file_exists(_path)) return;
+    
+    CFStringRef filePath = CFStringCreateWithCString(NULL, _path.c_str(), kCFStringEncodingUTF8);
+    CFURLRef url = CFURLCreateWithFileSystemPath(NULL, filePath, kCFURLPOSIXPathStyle, true);
+    
+    if(url == NULL) return;
+    
+    _pdf = CGPDFDocumentCreateWithURL(url);
+    
+}
+
+NAN_MODULE_INIT(PDFWrapper::Init) {
+    v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+    tpl->SetClassName(Nan::New("PDFWrapper").ToLocalChecked());
+    tpl->InstanceTemplate()->SetInternalFieldCount(1);
+    
+    Nan::SetPrototypeMethod(tpl, "getPath", GetPath);
+    Nan::SetPrototypeMethod(tpl, "isValid", IsValid);
+    Nan::SetPrototypeMethod(tpl, "count", Count);
+    
+    constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
+    Nan::Set(target, Nan::New("PDFWrapper").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
+}
 
 NAN_METHOD(PDFWrapper::New) {
     if (info.IsConstructCall()) {
-        double value = info[0]->IsUndefined() ? 0 : Nan::To<double>(info[0]).FromJust();
-        PDFWrapper *obj = new PDFWrapper("teste");
+        v8::String::Utf8Value param(info[0]->ToString());
+        PDFWrapper *obj = new PDFWrapper(std::string(*param));
         obj->Wrap(info.This());
         info.GetReturnValue().Set(info.This());
     } else {
         const int argc = 1;
         v8::Local<v8::Value> argv[argc] = {info[0]};
         v8::Local<v8::Function> cons = Nan::New(constructor);
-        info.GetReturnValue().Set(cons->NewInstance(argc, argv));
+        info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+    }
+}
+
+NAN_METHOD(PDFWrapper::NewInstance) {
+    const int argc = 1;
+    v8::Local<v8::Value> argv[argc] = {info[0]};
+    v8::Local<v8::Function> cons = Nan::New(constructor);
+    info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+}
+
+NAN_METHOD(PDFWrapper::GetPath) {
+    PDFWrapper *obj = ObjectWrap::Unwrap<PDFWrapper>(info.Holder());
+    info.GetReturnValue().Set(Nan::New(obj->_path).ToLocalChecked());
+}
+
+NAN_METHOD(PDFWrapper::IsValid) {
+    PDFWrapper *obj = ObjectWrap::Unwrap<PDFWrapper>(info.Holder());
+    info.GetReturnValue().Set(obj->isValid());
+}
+
+NAN_METHOD(PDFWrapper::Count) {
+    PDFWrapper *obj = ObjectWrap::Unwrap<PDFWrapper>(info.Holder());
+    if(obj->isValid()) {
+        int count = (int)CGPDFDocumentGetNumberOfPages(obj->_pdf);
+        info.GetReturnValue().Set(count);
+    }else{
+        Nan::ThrowError("Invalid PDF");
     }
 }

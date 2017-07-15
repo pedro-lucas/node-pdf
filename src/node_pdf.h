@@ -9,27 +9,31 @@
 #ifndef NODE_PDF_MAIN_INCLUDED
 #define NODE_PDF_MAIN_INCLUDED
 
-#include <string>
 #include <nan.h>
-
-using std::string;
+#include <ApplicationServices/ApplicationServices.h>
 
 class PDFWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
-    PDFWrapper(std::string path) : _path(path) {  }
+    static NAN_METHOD(NewInstance);
     
 private:
     
-    explicit PDFWrapper(double path);
+    explicit PDFWrapper(std::string path = "");    
     ~PDFWrapper();
 
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
+    static NAN_METHOD(GetPath);
+    static NAN_METHOD(IsValid);
+    static NAN_METHOD(Count);
+
+    bool isValid();
 
     std::string _path;
-    
+    CGPDFDocumentRef _pdf = NULL;
+
 };
 
 #endif // NODE_PDF_MAIN_INCLUDED

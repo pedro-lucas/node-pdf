@@ -22,10 +22,12 @@
   },
   "homepage": "https://github.com/pedro-lucas/node-pdf#readme",
   "dependencies": {
-    "nan": "^2.6.2"
+    "bindings": "^1.2.1",
+    "nan": "^2.6.2",
+    "semver": "^5.3.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.0",
+    "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
     "gulp-filter": "^5.0.0",
     "gulp-jasmine": "^2.4.2",
