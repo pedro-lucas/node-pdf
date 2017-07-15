@@ -17,12 +17,20 @@ describe("Native async operations", () => {
 
   it('Create PDFWrapper', () => {
     const obj = pdf.create(sample1);
-    expect(obj.isValid()).toBeTruthy();
+    expect(obj instanceof pdf.PDFWrapper).toBeTruthy();
   });
 
   it('PDF pages count', () => {
     const obj = pdf.create(sample1);
     expect(obj.count() > 0).toBeTruthy();
+  });
+
+  it('PDF dispatch error', () => {
+    try {
+      pdf.create("invalid-path");
+    }catch(e) {
+      expect(e.message).toEqual("Invalid PDF");
+    }
   });
 
 });

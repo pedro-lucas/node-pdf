@@ -11,13 +11,6 @@
 #include <sys/stat.h>
 #include <string>
 
-inline bool PDFWrapper::isValid() {
-    if(_pdf) {
-        return true;
-    }
-    return false;
-}
-
 inline bool file_exists(const std::string& name) {
     struct stat buffer;
     return (stat (name.c_str(), &buffer) == 0);
@@ -52,7 +45,6 @@ NAN_MODULE_INIT(PDFWrapper::Init) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
     Nan::SetPrototypeMethod(tpl, "getPath", GetPath);
-    Nan::SetPrototypeMethod(tpl, "isValid", IsValid);
     Nan::SetPrototypeMethod(tpl, "count", Count);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -63,6 +55,10 @@ NAN_METHOD(PDFWrapper::New) {
     if (info.IsConstructCall()) {
         v8::String::Utf8Value param(info[0]->ToString());
         PDFWrapper *obj = new PDFWrapper(std::string(*param));
+        if(!obj->_pdf) {
+            Nan::ThrowError("Invalid PDF");
+            return;
+        }
         obj->Wrap(info.This());
         info.GetReturnValue().Set(info.This());
     } else {
@@ -77,7 +73,10 @@ NAN_METHOD(PDFWrapper::NewInstance) {
     const int argc = 1;
     v8::Local<v8::Value> argv[argc] = {info[0]};
     v8::Local<v8::Function> cons = Nan::New(constructor);
-    info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+    auto obj = Nan::NewInstance(cons, argc, argv);
+    if(!obj.IsEmpty()) {
+        info.GetReturnValue().Set(obj.ToLocalChecked());
+    }
 }
 
 NAN_METHOD(PDFWrapper::GetPath) {
@@ -85,17 +84,8 @@ NAN_METHOD(PDFWrapper::GetPath) {
     info.GetReturnValue().Set(Nan::New(obj->_path).ToLocalChecked());
 }
 
-NAN_METHOD(PDFWrapper::IsValid) {
-    PDFWrapper *obj = ObjectWrap::Unwrap<PDFWrapper>(info.Holder());
-    info.GetReturnValue().Set(obj->isValid());
-}
-
 NAN_METHOD(PDFWrapper::Count) {
     PDFWrapper *obj = ObjectWrap::Unwrap<PDFWrapper>(info.Holder());
-    if(obj->isValid()) {
-        int count = (int)CGPDFDocumentGetNumberOfPages(obj->_pdf);
-        info.GetReturnValue().Set(count);
-    }else{
-        Nan::ThrowError("Invalid PDF");
-    }
+    int count = (int)CGPDFDocumentGetNumberOfPages(obj->_pdf);
+    info.GetReturnValue().Set(count);
 }

@@ -26,10 +26,7 @@ private:
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(GetPath);
-    static NAN_METHOD(IsValid);
     static NAN_METHOD(Count);
-
-    bool isValid();
 
     std::string _path;
     CGPDFDocumentRef _pdf = NULL;
