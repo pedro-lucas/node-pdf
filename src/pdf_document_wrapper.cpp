@@ -98,8 +98,7 @@ NAN_METHOD(PDFDocumentWrapper::Count) {
 }
 
 NAN_METHOD(PDFDocumentWrapper::getPage) {
-    if()
+//    TODO: Create PDFPageWrapper
 //    PDFDocumentWrapper *obj = ObjectWrap::Unwrap<PDFDocumentWrapper>(info.Holder());
-    //TODO: Create PDFPageWrapper
 //    info.GetReturnValue().Set(count);
 }
