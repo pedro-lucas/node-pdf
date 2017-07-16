@@ -15,9 +15,9 @@ describe("Native async operations", () => {
     expect(pdf.check()).toEqual("Everything working right!");
   });
 
-  it('Create PDFWrapper', () => {
+  it('Create document', () => {
     const obj = pdf.create(sample1);
-    expect(obj instanceof pdf.PDFWrapper).toBeTruthy();
+    expect(obj instanceof pdf.PDFDocumentWrapper).toBeTruthy();
   });
 
   it('PDF pages count', () => {

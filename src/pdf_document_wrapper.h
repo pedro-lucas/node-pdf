@@ -12,24 +12,29 @@
 #include <nan.h>
 #include <ApplicationServices/ApplicationServices.h>
 
-class PDFWrapper : public Nan::ObjectWrap {
+class PDFDocumentWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
     static NAN_METHOD(NewInstance);
     
+    std::string _path;
+    
+    /* Document pointer
+     *
+     */
+    CGPDFDocumentRef _pdf = NULL;
+
 private:
     
-    explicit PDFWrapper(std::string path = "");    
-    ~PDFWrapper();
+    explicit PDFDocumentWrapper(std::string path = "");
+    ~PDFDocumentWrapper();
 
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(GetPath);
     static NAN_METHOD(Count);
-
-    std::string _path;
-    CGPDFDocumentRef _pdf = NULL;
+    static NAN_METHOD(getPage);
 
 };
 

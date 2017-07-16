@@ -7,8 +7,8 @@
             ],
             "sources": [
                 "src/addon.cpp",
-                "src/node_pdf.cpp",
-                "src/node_pdf.h"
+                "src/pdf_document_wrapper.cpp",
+                "src/pdf_page_wrapper.cpp"
             ],
             "cflags": ["-Wall", "-std=c++11"],
             "conditions": [
