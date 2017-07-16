@@ -53,6 +53,10 @@ NAN_MODULE_INIT(PDFDocumentWrapper::Init) {
 
 NAN_METHOD(PDFDocumentWrapper::New) {
     if (info.IsConstructCall()) {
+        if(info.Length() < 1) {
+            Nan::ThrowError("Invalid params");
+            return;
+        }
         v8::String::Utf8Value param(info[0]->ToString());
         PDFDocumentWrapper *obj = new PDFDocumentWrapper(std::string(*param));
         if(!obj->_pdf) {
@@ -65,7 +69,10 @@ NAN_METHOD(PDFDocumentWrapper::New) {
         const int argc = 1;
         v8::Local<v8::Value> argv[argc] = {info[0]};
         v8::Local<v8::Function> cons = Nan::New(constructor);
-        info.GetReturnValue().Set(Nan::NewInstance(cons, argc, argv).ToLocalChecked());
+        auto obj = Nan::NewInstance(cons, argc, argv);
+        if(!obj.IsEmpty()) {
+            info.GetReturnValue().Set(obj.ToLocalChecked());
+        }
     }
 }
 
@@ -91,6 +98,7 @@ NAN_METHOD(PDFDocumentWrapper::Count) {
 }
 
 NAN_METHOD(PDFDocumentWrapper::getPage) {
+    if()
 //    PDFDocumentWrapper *obj = ObjectWrap::Unwrap<PDFDocumentWrapper>(info.Holder());
     //TODO: Create PDFPageWrapper
 //    info.GetReturnValue().Set(count);
