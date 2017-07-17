@@ -42,7 +42,7 @@ describe("Native async operations", () => {
   it('PDF get cropbox', () => {
     const doc = pdf.create(sample2);
     const page = doc.getPage(1);
-    const size = page.getCropbox();
+    const size = page.getSize();
     expect(size.width).toEqual(595.27);
     expect(size.height).toEqual(841.89);
   });

@@ -35,7 +35,7 @@ NAN_MODULE_INIT(PDFPageWrapper::Init) {
     tpl->SetClassName(Nan::New("PDFPageWrapper").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
-    Nan::SetPrototypeMethod(tpl, "getCropbox", Cropbox);
+    Nan::SetPrototypeMethod(tpl, "getSize", Size);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
     Nan::Set(target, Nan::New("PDFPageWrapper").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
@@ -74,7 +74,7 @@ v8::MaybeLocal<v8::Object> PDFPageWrapper::NewInstance(v8::Local<v8::Value> arg1
     return Nan::NewInstance(cons, argc, argv);
 }
 
-NAN_METHOD(PDFPageWrapper::Cropbox) {
+NAN_METHOD(PDFPageWrapper::Size) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
     CGPDFPageRef page = CGPDFDocumentGetPage(obj->_document->_pdf, obj->_pageIndex);
     CGRect rect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
