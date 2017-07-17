@@ -31,6 +31,7 @@ private:
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(Size);
+    static NAN_METHOD(GetImage);
     
 };
 
