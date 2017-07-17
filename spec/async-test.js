@@ -16,13 +16,13 @@ describe("Native async operations", () => {
   });
 
   it('Create document', () => {
-    const obj = pdf.create(sample1);
-    expect(obj instanceof pdf.PDFDocumentWrapper).toBeTruthy();
+    const doc = pdf.create(sample1);
+    expect(doc instanceof pdf.PDFDocumentWrapper).toBeTruthy();
   });
 
   it('PDF pages count', () => {
-    const obj = pdf.create(sample1);
-    expect(obj.count() > 0).toBeTruthy();
+    const doc = pdf.create(sample1);
+    expect(doc.count() > 0).toBeTruthy();
   });
 
   it('PDF dispatch error', () => {
@@ -31,6 +31,20 @@ describe("Native async operations", () => {
     }catch(e) {
       expect(e.message).toEqual("Invalid PDF");
     }
+  });
+
+  it('PDF get page', () => {
+    const doc = pdf.create(sample2);
+    const page = doc.getPage(1);
+    expect(page instanceof pdf.PDFPageWrapper).toBeTruthy();
+  });
+
+  it('PDF get cropbox', () => {
+    const doc = pdf.create(sample2);
+    const page = doc.getPage(1);
+    const size = page.getCropbox();
+    expect(size.width).toEqual(595.27);
+    expect(size.height).toEqual(841.89);
   });
 
 });

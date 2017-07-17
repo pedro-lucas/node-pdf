@@ -7,6 +7,7 @@
 //
 
 #include "pdf_document_wrapper.h"
+#include "pdf_page_wrapper.h"
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string>
@@ -45,6 +46,7 @@ NAN_MODULE_INIT(PDFDocumentWrapper::Init) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
     Nan::SetPrototypeMethod(tpl, "getPath", GetPath);
+    Nan::SetPrototypeMethod(tpl, "getPage", GetPage);
     Nan::SetPrototypeMethod(tpl, "count", Count);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -97,8 +99,13 @@ NAN_METHOD(PDFDocumentWrapper::Count) {
     info.GetReturnValue().Set(count);
 }
 
-NAN_METHOD(PDFDocumentWrapper::getPage) {
-//    TODO: Create PDFPageWrapper
-//    PDFDocumentWrapper *obj = ObjectWrap::Unwrap<PDFDocumentWrapper>(info.Holder());
-//    info.GetReturnValue().Set(count);
+NAN_METHOD(PDFDocumentWrapper::GetPage) {
+    if(info.Length() < 1) {
+        Nan::ThrowError("Invalid params");
+        return;
+    }
+    v8::MaybeLocal<v8::Object> page = PDFPageWrapper::NewInstance(info.Holder(), info[0]);
+    if(!page.IsEmpty()) {
+        info.GetReturnValue().Set(page.ToLocalChecked());
+    }
 }

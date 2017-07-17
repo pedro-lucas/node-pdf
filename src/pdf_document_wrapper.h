@@ -34,7 +34,7 @@ private:
     static NAN_METHOD(New);
     static NAN_METHOD(GetPath);
     static NAN_METHOD(Count);
-    static NAN_METHOD(getPage);
+    static NAN_METHOD(GetPage);
 
 };
 
