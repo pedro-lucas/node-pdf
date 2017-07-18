@@ -18,6 +18,7 @@ public:
     static NAN_MODULE_INIT(Init);
     static NAN_METHOD(NewInstance);
     
+    unsigned int count();
     std::string _path;
     
     /* Document pointer

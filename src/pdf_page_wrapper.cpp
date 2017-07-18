@@ -21,7 +21,7 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
         return;
     }
     
-    if(CGPDFDocumentGetNumberOfPages(document->_pdf) < (size_t)pageIndex) {
+    if(document->count() < (size_t)pageIndex) {
         return;
     }
     

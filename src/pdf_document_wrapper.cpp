@@ -40,6 +40,10 @@ PDFDocumentWrapper::PDFDocumentWrapper(std::string path) {
     
 }
 
+unsigned int PDFDocumentWrapper::count() {
+    return (unsigned int)CGPDFDocumentGetNumberOfPages(_pdf);
+}
+
 NAN_MODULE_INIT(PDFDocumentWrapper::Init) {
     v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
     tpl->SetClassName(Nan::New("PDFDocumentWrapper").ToLocalChecked());
@@ -95,8 +99,7 @@ NAN_METHOD(PDFDocumentWrapper::GetPath) {
 
 NAN_METHOD(PDFDocumentWrapper::Count) {
     PDFDocumentWrapper *obj = ObjectWrap::Unwrap<PDFDocumentWrapper>(info.Holder());
-    int count = (int)CGPDFDocumentGetNumberOfPages(obj->_pdf);
-    info.GetReturnValue().Set(count);
+    info.GetReturnValue().Set(obj->count());
 }
 
 NAN_METHOD(PDFDocumentWrapper::GetPage) {
