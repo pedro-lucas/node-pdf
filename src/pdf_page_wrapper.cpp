@@ -10,7 +10,7 @@
 #include "pdf_document_wrapper.h"
 #include "pdf_utils.h"
 
-Nan::Persistent<v8::Function> PDFPageWrapper::constructor;
+Nan::Persistent<Function> PDFPageWrapper::constructor;
 
 PDFPageWrapper::~PDFPageWrapper() {
     
@@ -31,13 +31,14 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
     
 }
 
-CFDataRef PDFPageWrapper::getImage(double width, double height) {
+CFDataRef PDFPageWrapper::getImage(double width, double height, kImageType type) {
 
-    CGPDFPageRef page = CGPDFDocumentGetPage(_document->_pdf, _pageIndex);
-    CGImageRef image = CreatePDFPageImage(page, CGSizeMake(width, height), false);
+    CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), false);
+    
+    if(image == NULL) return NULL;
     
     CFMutableDataRef newImageData = CFDataCreateMutable(NULL, 0);
-    CGImageDestinationRef destination = CGImageDestinationCreateWithData(newImageData, kUTTypePNG, 1, NULL);
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData(newImageData, type == kImageTypePNG ? kUTTypePNG : kUTTypeJPEG, 1, NULL);
     CGImageDestinationAddImage(destination, image, nil);
     
     CGImageRelease(image);
@@ -58,12 +59,11 @@ BoxRect PDFPageWrapper::getCropbox() {
 
 
 NAN_MODULE_INIT(PDFPageWrapper::Init) {
-    v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
+    Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
     tpl->SetClassName(Nan::New("PDFPageWrapper").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
     Nan::SetPrototypeMethod(tpl, "getSize", Size);
-    Nan::SetPrototypeMethod(tpl, "saveImage", SaveImage);
     Nan::SetPrototypeMethod(tpl, "getImageBuffer", GetImageBuffer);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -87,8 +87,8 @@ NAN_METHOD(PDFPageWrapper::New) {
         info.GetReturnValue().Set(info.This());
     } else {
         const int argc = 1;
-        v8::Local<v8::Value> argv[argc] = {info[0]};
-        v8::Local<v8::Function> cons = Nan::New(constructor);
+        Local<Value> argv[argc] = {info[0]};
+        Local<Function> cons = Nan::New(constructor);
         auto obj = Nan::NewInstance(cons, argc, argv);
         if(!obj.IsEmpty()) {
             info.GetReturnValue().Set(obj.ToLocalChecked());
@@ -96,17 +96,17 @@ NAN_METHOD(PDFPageWrapper::New) {
     }
 }
 
-v8::MaybeLocal<v8::Object> PDFPageWrapper::NewInstance(v8::Local<v8::Value> arg1, v8::Local<v8::Value> arg2) {
+MaybeLocal<Object> PDFPageWrapper::NewInstance(Local<Value> arg1, Local<Value> arg2) {
     const int argc = 2;
-    v8::Local<v8::Value> argv[argc] = {arg1, arg2};
-    v8::Local<v8::Function> cons = Nan::New(constructor);
+    Local<Value> argv[argc] = {arg1, arg2};
+    Local<Function> cons = Nan::New(constructor);
     return Nan::NewInstance(cons, argc, argv);
 }
 
 NAN_METHOD(PDFPageWrapper::Size) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
     BoxRect rect = obj->getCropbox();
-    v8::Local<v8::Object> ret = Nan::New<v8::Object>();
+    Local<Object> ret = Nan::New<Object>();
     ret->Set(Nan::New("width").ToLocalChecked(), Nan::New(rect.size.width));
     ret->Set(Nan::New("height").ToLocalChecked(), Nan::New(rect.size.height));
     info.GetReturnValue().Set(ret);
@@ -115,10 +115,47 @@ NAN_METHOD(PDFPageWrapper::Size) {
 NAN_METHOD(PDFPageWrapper::GetImageBuffer) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
     BoxRect rect = obj->getCropbox();
-    CFDataRef data = obj->getImage(rect.size.width, rect.size.height);
+    BoxSize size = {rect.size.width, rect.size.height};
+    kImageType type = kImageTypePNG;
+    
+    if(info.Length() > 0) {
+        if(info[0]->IsObject()) {
+            Local<Object> input = info[0].As<Object>();
+            auto nWidth = input->Get(Nan::New("width").ToLocalChecked());
+            auto nHeight = input->Get(Nan::New("height").ToLocalChecked());
+            auto nScale = input->Get(Nan::New("scale").ToLocalChecked());
+            auto nFormat = input->Get(Nan::New("format").ToLocalChecked()); //1 - PNG, 2 - JPG
+            
+            if(nScale->IsNumber() && nScale->NumberValue() > 0) {
+                double scale = nScale->NumberValue();
+                size.width *= scale;
+                size.height *= scale;
+            }else if(nWidth->IsNumber() && nHeight->IsNumber() && nWidth->NumberValue() > 0 && nHeight->NumberValue() > 0) {
+                size.width = nWidth->NumberValue();
+                size.height = nHeight->NumberValue();
+            }
+            
+            if(nFormat->NumberValue() == kImageTypeJPG) {
+                type = kImageTypeJPG;
+            }
+            
+        }
+    }
+    
+    
+    CFDataRef data = obj->getImage(size.width, size.height, type);
+    
+    if(data == NULL) {
+        Nan::ThrowError("Internal module error");
+        return;
+    }
+    
     CFIndex length = CFDataGetLength(data);
     UInt8 *buffer = new UInt8[length];
+    
     CFDataGetBytes(data, CFRangeMake(0, length), buffer);
     char *buff = (char *)buffer;
+    
     info.GetReturnValue().Set(Nan::NewBuffer(buff, (uint32_t)length).ToLocalChecked());
+    
 }

@@ -7,7 +7,8 @@ describe("Native async operations", () => {
 
   const sample1 = path.join(__dirname, 'files', 'sample1.pdf');
   const sample2 = path.join(__dirname, 'files', 'sample2.pdf');
-  const sampleImage1 = path.join(__dirname, 'tmp', 'sample1.png');
+  const samplePNG = path.join(__dirname, 'tmp', 'sample1.png');
+  const sampleJPG = path.join(__dirname, 'tmp', 'sample2.jpg');
 
   beforeAll(() => {
     jasmine.addMatchers(matchers);
@@ -49,17 +50,31 @@ describe("Native async operations", () => {
     expect(size.height).toEqual(841.89);
   });
 
-  it('PDF get image buffer', done => {
+  it('PDF get image buffer png', () => {
     const doc = pdf.create(sample2);
     const page = doc.getPage(1);
     try {
-      const buffer = page.getImageBuffer({
+      const img = page.getImageBuffer({
         width: 768,
         height: 1024,
-        scale: 2,
         format: pdf.PNG
       });
-      fs.writeFile(sampleImage1, buffer);
+      fs.writeFileSync(samplePNG, img);
+      expect(true).toBeTruthy();
+    }catch(e) {
+      expect(false).toBeTruthy();
+    }
+  });
+
+  it('PDF get image buffer jpg', () => {
+    const doc = pdf.create(sample2);
+    const page = doc.getPage(1);
+    try {
+      const img = page.getImageBuffer({
+        scale: 2,
+        format: pdf.JPG
+      });
+      fs.writeFileSync(sampleJPG, img);
       expect(true).toBeTruthy();
     }catch(e) {
       expect(false).toBeTruthy();

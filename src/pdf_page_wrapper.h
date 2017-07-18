@@ -12,6 +12,14 @@
 #include <nan.h>
 #include <ApplicationServices/ApplicationServices.h>
 
+using namespace v8;
+using namespace std;
+
+typedef enum {
+    kImageTypePNG = 1,
+    kImageTypeJPG = 2
+} kImageType;
+
 class PDFDocumentWrapper;
 
 class BoxSize {
@@ -45,10 +53,10 @@ class PDFPageWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
-    static v8::MaybeLocal<v8::Object> NewInstance(v8::Local<v8::Value> arg1, v8::Local<v8::Value> arg2);
+    static MaybeLocal<Object> NewInstance(Local<Value> arg1, Local<Value> arg2);
     
     BoxRect getCropbox();
-    CFDataRef getImage(double width, double height);
+    CFDataRef getImage(double width, double height, kImageType type);
     
     PDFDocumentWrapper *_document = NULL;
     unsigned int _pageIndex = 0;
@@ -58,7 +66,7 @@ private:
     explicit PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIndex);
     ~PDFPageWrapper();
     
-    static Nan::Persistent<v8::Function> constructor;
+    static Nan::Persistent<Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(Size);
     static NAN_METHOD(GetImageBuffer);
