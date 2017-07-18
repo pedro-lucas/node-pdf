@@ -1,11 +1,13 @@
 const matchers = require('./matchers');
 const path = require('path');
 const pdf = require('../index.js');
+const fs = require('fs');
 
 describe("Native async operations", () => {
 
   const sample1 = path.join(__dirname, 'files', 'sample1.pdf');
   const sample2 = path.join(__dirname, 'files', 'sample2.pdf');
+  const sampleImage1 = path.join(__dirname, 'tmp', 'sample1.png');
 
   beforeAll(() => {
     jasmine.addMatchers(matchers);
@@ -45,6 +47,23 @@ describe("Native async operations", () => {
     const size = page.getSize();
     expect(size.width).toEqual(595.27);
     expect(size.height).toEqual(841.89);
+  });
+
+  it('PDF get image buffer', done => {
+    const doc = pdf.create(sample2);
+    const page = doc.getPage(1);
+    try {
+      const buffer = page.getImageBuffer({
+        width: 768,
+        height: 1024,
+        scale: 2,
+        format: pdf.PNG
+      });
+      fs.writeFile(sampleImage1, buffer);
+      expect(true).toBeTruthy();
+    }catch(e) {
+      expect(false).toBeTruthy();
+    }
   });
 
 });

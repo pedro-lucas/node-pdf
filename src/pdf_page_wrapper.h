@@ -23,12 +23,32 @@ public:
     
 };
 
+class BoxPoint {
+    
+public:
+    double x = 0;
+    double y = 0;
+    BoxPoint(double xx, double yy) : x(xx), y(yy) {}
+    
+};
+
+class BoxRect {
+    
+public:
+    BoxPoint point;
+    BoxSize size;
+    BoxRect(BoxPoint p, BoxSize s) : point(p), size(s) {}
+    
+};
+
 class PDFPageWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
     static v8::MaybeLocal<v8::Object> NewInstance(v8::Local<v8::Value> arg1, v8::Local<v8::Value> arg2);
-    BoxSize getCropbox();
+    
+    BoxRect getCropbox();
+    CFDataRef getImage(double width, double height);
     
     PDFDocumentWrapper *_document = NULL;
     unsigned int _pageIndex = 0;
@@ -41,7 +61,6 @@ private:
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(Size);
-    static NAN_METHOD(SaveImage);
     static NAN_METHOD(GetImageBuffer);
     
 };

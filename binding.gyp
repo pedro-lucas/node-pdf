@@ -8,7 +8,8 @@
             "sources": [
                 "src/addon.cpp",
                 "src/pdf_document_wrapper.cpp",
-                "src/pdf_page_wrapper.cpp"
+                "src/pdf_page_wrapper.cpp",
+                "src/pdf_utils.cpp"
             ],
             "cflags": ["-Wall", "-std=c++11"],
             "conditions": [
