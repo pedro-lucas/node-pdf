@@ -30,13 +30,20 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
     
 }
 
+BoxSize PDFPageWrapper::getCropbox() {
+    CGPDFPageRef page = CGPDFDocumentGetPage(_document->_pdf, _pageIndex);
+    CGRect rect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
+    return {rect.size.width, rect.size.height};
+}
+
 NAN_MODULE_INIT(PDFPageWrapper::Init) {
     v8::Local<v8::FunctionTemplate> tpl = Nan::New<v8::FunctionTemplate>(New);
     tpl->SetClassName(Nan::New("PDFPageWrapper").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
     Nan::SetPrototypeMethod(tpl, "getSize", Size);
-    Nan::SetPrototypeMethod(tpl, "getImage", GetImage);
+    Nan::SetPrototypeMethod(tpl, "saveImage", SaveImage);
+    Nan::SetPrototypeMethod(tpl, "getImageBuffer", GetImageBuffer);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
     Nan::Set(target, Nan::New("PDFPageWrapper").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
@@ -77,20 +84,21 @@ v8::MaybeLocal<v8::Object> PDFPageWrapper::NewInstance(v8::Local<v8::Value> arg1
 
 NAN_METHOD(PDFPageWrapper::Size) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
-    CGPDFPageRef page = CGPDFDocumentGetPage(obj->_document->_pdf, obj->_pageIndex);
-    CGRect rect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
+    BoxSize size = obj->getCropbox();
     v8::Local<v8::Object> ret = Nan::New<v8::Object>();
-    ret->Set(Nan::New("width").ToLocalChecked(), Nan::New(rect.size.width));
-    ret->Set(Nan::New("height").ToLocalChecked(), Nan::New(rect.size.height));
+    ret->Set(Nan::New("width").ToLocalChecked(), Nan::New(size.width));
+    ret->Set(Nan::New("height").ToLocalChecked(), Nan::New(size.height));
     info.GetReturnValue().Set(ret);
 }
 
-NAN_METHOD(PDFPageWrapper::GetImage) {
+NAN_METHOD(PDFPageWrapper::SaveImage) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
-    CGPDFPageRef page = CGPDFDocumentGetPage(obj->_document->_pdf, obj->_pageIndex);
-    CGRect rect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
-    v8::Local<v8::Object> ret = Nan::New<v8::Object>();
-    ret->Set(Nan::New("width").ToLocalChecked(), Nan::New(rect.size.width));
-    ret->Set(Nan::New("height").ToLocalChecked(), Nan::New(rect.size.height));
-    info.GetReturnValue().Set(ret);
+    BoxSize size = obj->getCropbox();
+//    info.GetReturnValue().Set(ret);
+}
+
+NAN_METHOD(PDFPageWrapper::GetImageBuffer) {
+    PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
+    BoxSize size = obj->getCropbox();
+    //    info.GetReturnValue().Set(ret);
 }

@@ -14,11 +14,21 @@
 
 class PDFDocumentWrapper;
 
+class BoxSize {
+    
+public:
+    double width = 0;
+    double height = 0;
+    BoxSize(double w, double h) : width(w), height(h) {}
+    
+};
+
 class PDFPageWrapper : public Nan::ObjectWrap {
     
 public:
     static NAN_MODULE_INIT(Init);
     static v8::MaybeLocal<v8::Object> NewInstance(v8::Local<v8::Value> arg1, v8::Local<v8::Value> arg2);
+    BoxSize getCropbox();
     
     PDFDocumentWrapper *_document = NULL;
     unsigned int _pageIndex = 0;
@@ -31,7 +41,8 @@ private:
     static Nan::Persistent<v8::Function> constructor;
     static NAN_METHOD(New);
     static NAN_METHOD(Size);
-    static NAN_METHOD(GetImage);
+    static NAN_METHOD(SaveImage);
+    static NAN_METHOD(GetImageBuffer);
     
 };
 
