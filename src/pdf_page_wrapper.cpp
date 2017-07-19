@@ -10,6 +10,67 @@
 #include "pdf_document_wrapper.h"
 #include "pdf_utils.h"
 
+class CreateImageWorker : public Nan::AsyncWorker {
+public:
+    CreateImageWorker(Nan::Callback *callback, PDFPageWrapper *p, BoxSize s, kImageType t) : AsyncWorker(callback), page(p), size(s), type(t) {}
+    ~CreateImageWorker() {}
+    
+    void Execute () {
+        result = page->getImageBuffer(size.width, size.height, type);
+    }
+    
+    void HandleOKCallback () {
+        if(callback != NULL) {
+            Local<Value> argv[2];
+            if(result.IsEmpty()) {
+                argv[0] = Nan::Error("Internal module error");
+                argv[1] = Nan::Null();
+            }else{
+                argv[0] = Nan::Null();
+                argv[1] = result.ToLocalChecked();
+            }
+            callback->Call(2, argv);
+        }
+    }
+    
+private:
+    PDFPageWrapper *page;
+    BoxSize size;
+    kImageType type;
+    MaybeLocal<Object> result;
+    
+};
+
+kImageType getImageType(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+    if(info.Length() > 0 && info[0]->IsObject()) {
+        Local<Object> input = info[0].As<Object>();
+        auto nFormat = input->Get(Nan::New("format").ToLocalChecked()); //1 - PNG, 2 - JPG
+        if(nFormat->NumberValue() == kImageTypeJPG) {
+            return kImageTypeJPG;
+        }
+    }
+    return kImageTypePNG;
+}
+
+BoxSize getImageSize(const Nan::FunctionCallbackInfo<v8::Value>& info, BoxSize size) {
+    if(info.Length() > 0 && info[0]->IsObject()) {
+        Local<Object> input = info[0].As<Object>();
+        auto nWidth = input->Get(Nan::New("width").ToLocalChecked());
+        auto nHeight = input->Get(Nan::New("height").ToLocalChecked());
+        auto nScale = input->Get(Nan::New("scale").ToLocalChecked());
+        if(nScale->IsNumber() && nScale->NumberValue() > 0) {
+            double scale = nScale->NumberValue();
+            size.width *= scale;
+            size.height *= scale;
+        }else if(nWidth->IsNumber() && nHeight->IsNumber() && nWidth->NumberValue() > 0 && nHeight->NumberValue() > 0) {
+            size.width = nWidth->NumberValue();
+            size.height = nHeight->NumberValue();
+        }
+        
+    }
+    return size;
+}
+
 Nan::Persistent<Function> PDFPageWrapper::constructor;
 
 PDFPageWrapper::~PDFPageWrapper() {
@@ -33,7 +94,7 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
 
 MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, kImageType type) {
     
-    CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), false);
+    CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), true);
     
     if(image == NULL) {
         return MaybeLocal<Object>(Local<Object>());
@@ -54,7 +115,11 @@ MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, k
     
     CFDataGetBytes(data, CFRangeMake(0, length), buffer);
     
-    return Nan::NewBuffer((char *)buffer, length);
+    auto ret = Nan::NewBuffer((char *)buffer, length);
+    
+    CFRelease(data);
+    
+    return ret;
     
 }
 
@@ -71,6 +136,7 @@ NAN_MODULE_INIT(PDFPageWrapper::Init) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
     
     Nan::SetPrototypeMethod(tpl, "getSize", Size);
+    Nan::SetPrototypeMethod(tpl, "getImageBufferSync", GetImageBufferSync);
     Nan::SetPrototypeMethod(tpl, "getImageBuffer", GetImageBuffer);
     
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -121,33 +187,21 @@ NAN_METHOD(PDFPageWrapper::Size) {
 
 NAN_METHOD(PDFPageWrapper::GetImageBuffer) {
     PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
-    BoxRect rect = obj->getCropbox();
-    BoxSize size = {rect.size.width, rect.size.height};
-    kImageType type = kImageTypePNG;
+    BoxSize size = getImageSize(info, obj->getCropbox().size);
+    kImageType type = getImageType(info);
+    Nan::Callback *callback = NULL;
     
-    if(info.Length() > 0) {
-        if(info[0]->IsObject()) {
-            Local<Object> input = info[0].As<Object>();
-            auto nWidth = input->Get(Nan::New("width").ToLocalChecked());
-            auto nHeight = input->Get(Nan::New("height").ToLocalChecked());
-            auto nScale = input->Get(Nan::New("scale").ToLocalChecked());
-            auto nFormat = input->Get(Nan::New("format").ToLocalChecked()); //1 - PNG, 2 - JPG
-            
-            if(nScale->IsNumber() && nScale->NumberValue() > 0) {
-                double scale = nScale->NumberValue();
-                size.width *= scale;
-                size.height *= scale;
-            }else if(nWidth->IsNumber() && nHeight->IsNumber() && nWidth->NumberValue() > 0 && nHeight->NumberValue() > 0) {
-                size.width = nWidth->NumberValue();
-                size.height = nHeight->NumberValue();
-            }
-            
-            if(nFormat->NumberValue() == kImageTypeJPG) {
-                type = kImageTypeJPG;
-            }
-            
-        }
+    if(info.Length() > 1 && info[1]->IsFunction()) {
+        callback = new Nan::Callback(info[1].As<Function>());
     }
+    
+    Nan::AsyncQueueWorker(new CreateImageWorker(callback, obj, size, type));
+}
+
+NAN_METHOD(PDFPageWrapper::GetImageBufferSync) {
+    PDFPageWrapper *obj = ObjectWrap::Unwrap<PDFPageWrapper>(info.Holder());
+    BoxSize size = getImageSize(info, obj->getCropbox().size);
+    kImageType type = getImageType(info);
     
     MaybeLocal<Object> buff = obj->getImageBuffer(size.width, size.height, type);
     

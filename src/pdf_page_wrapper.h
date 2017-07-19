@@ -70,6 +70,7 @@ private:
     static NAN_METHOD(New);
     static NAN_METHOD(Size);
     static NAN_METHOD(GetImageBuffer);
+    static NAN_METHOD(GetImageBufferSync);
     
 };
 
