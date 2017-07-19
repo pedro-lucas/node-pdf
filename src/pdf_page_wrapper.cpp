@@ -31,23 +31,30 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
     
 }
 
-CFDataRef PDFPageWrapper::getImage(double width, double height, kImageType type) {
-
+MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, kImageType type) {
+    
     CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), false);
     
-    if(image == NULL) return NULL;
+    if(image == NULL) {
+        return MaybeLocal<Object>(Local<Object>());
+    }
     
-    CFMutableDataRef newImageData = CFDataCreateMutable(NULL, 0);
-    CGImageDestinationRef destination = CGImageDestinationCreateWithData(newImageData, type == kImageTypePNG ? kUTTypePNG : kUTTypeJPEG, 1, NULL);
+    CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
+    CGImageDestinationRef destination = CGImageDestinationCreateWithData(data, type == kImageTypePNG ? kUTTypePNG : kUTTypeJPEG, 1, NULL);
     CGImageDestinationAddImage(destination, image, nil);
     
     CGImageRelease(image);
     
     if(!CGImageDestinationFinalize(destination)) {
-        return NULL;
+        return MaybeLocal<Object>(Local<Object>());
     }
     
-    return newImageData;
+    CFIndex length = CFDataGetLength(data);
+    UInt8 *buffer = new UInt8[length];
+    
+    CFDataGetBytes(data, CFRangeMake(0, length), buffer);
+    
+    return Nan::NewBuffer((char *)buffer, length);
     
 }
 
@@ -142,20 +149,13 @@ NAN_METHOD(PDFPageWrapper::GetImageBuffer) {
         }
     }
     
+    MaybeLocal<Object> buff = obj->getImageBuffer(size.width, size.height, type);
     
-    CFDataRef data = obj->getImage(size.width, size.height, type);
-    
-    if(data == NULL) {
+    if(buff.IsEmpty()) {
         Nan::ThrowError("Internal module error");
         return;
     }
     
-    CFIndex length = CFDataGetLength(data);
-    UInt8 *buffer = new UInt8[length];
-    
-    CFDataGetBytes(data, CFRangeMake(0, length), buffer);
-    char *buff = (char *)buffer;
-    
-    info.GetReturnValue().Set(Nan::NewBuffer(buff, (uint32_t)length).ToLocalChecked());
+    info.GetReturnValue().Set(buff.ToLocalChecked());
     
 }
