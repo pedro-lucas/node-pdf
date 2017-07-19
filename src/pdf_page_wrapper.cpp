@@ -16,18 +16,18 @@ public:
     ~CreateImageWorker() {}
     
     void Execute () {
-        result = page->getImageBuffer(size.width, size.height, type);
+        buff = page->getImageBuffer(size.width, size.height, type, &resultSize);
     }
     
     void HandleOKCallback () {
         if(callback != NULL) {
             Local<Value> argv[2];
-            if(result.IsEmpty()) {
+            if(resultSize == 0) {
                 argv[0] = Nan::Error("Internal module error");
                 argv[1] = Nan::Null();
             }else{
                 argv[0] = Nan::Null();
-                argv[1] = result.ToLocalChecked();
+                argv[1] = Nan::NewBuffer(buff, resultSize).ToLocalChecked();
             }
             callback->Call(2, argv);
         }
@@ -37,7 +37,8 @@ private:
     PDFPageWrapper *page;
     BoxSize size;
     kImageType type;
-    MaybeLocal<Object> result;
+    char *buff;
+    long resultSize = 0;
     
 };
 
@@ -92,12 +93,12 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
     
 }
 
-MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, kImageType type) {
+char* PDFPageWrapper::getImageBuffer(double width, double height, kImageType type, long *buffSize) {
     
     CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), true);
     
     if(image == NULL) {
-        return MaybeLocal<Object>(Local<Object>());
+        return NULL;
     }
     
     CFMutableDataRef data = CFDataCreateMutable(NULL, 0);
@@ -107,7 +108,7 @@ MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, k
     CGImageRelease(image);
     
     if(!CGImageDestinationFinalize(destination)) {
-        return MaybeLocal<Object>(Local<Object>());
+        return NULL;
     }
     
     CFIndex length = CFDataGetLength(data);
@@ -115,11 +116,11 @@ MaybeLocal<Object> PDFPageWrapper::getImageBuffer(double width, double height, k
     
     CFDataGetBytes(data, CFRangeMake(0, length), buffer);
     
-    auto ret = Nan::NewBuffer((char *)buffer, length);
+    *buffSize = length;
     
     CFRelease(data);
-    
-    return ret;
+        
+    return (char*)buffer;
     
 }
 
@@ -203,13 +204,14 @@ NAN_METHOD(PDFPageWrapper::GetImageBufferSync) {
     BoxSize size = getImageSize(info, obj->getCropbox().size);
     kImageType type = getImageType(info);
     
-    MaybeLocal<Object> buff = obj->getImageBuffer(size.width, size.height, type);
+    long length = 0;
+    char *buff = obj->getImageBuffer(size.width, size.height, type, &length);
     
-    if(buff.IsEmpty()) {
+    if(buff == NULL) {
         Nan::ThrowError("Internal module error");
         return;
     }
     
-    info.GetReturnValue().Set(buff.ToLocalChecked());
+    info.GetReturnValue().Set(Nan::NewBuffer(buff, length).ToLocalChecked());
     
 }

@@ -12,21 +12,21 @@ describe("Native async operations", () => {
     jasmine.addMatchers(matchers);
   });
 
-  // it('PDF get image buffer png', done => {
-  //   const doc = pdf.create(sample);
-  //   const page = doc.getPage(1);
-  //   const img = page.getImageBuffer({
-  //     scale: 2,
-  //     format: pdf.PNG
-  //   }, (err) => {
-  //     if(err) {
-  //       expect(false).toBeTruthy();
-  //     }else{
-  //       fs.writeFileSync(samplePNG, img);
-  //       expect(true).toBeTruthy();
-  //     }
-  //     done();
-  //   });
-  // });
+  it('PDF get image buffer png', done => {
+    const doc = pdf.create(sample);
+    const page = doc.getPage(1);
+    const img = page.getImageBuffer({
+      scale: 2,
+      format: pdf.PNG
+    }, (err, img) => {
+      if(err) {
+        expect(false).toBeTruthy();
+      }else{
+        fs.writeFileSync(samplePNG, img);
+        expect(true).toBeTruthy();
+      }
+      done();
+    });
+  });
 
 });

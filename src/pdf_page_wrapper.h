@@ -56,7 +56,7 @@ public:
     static MaybeLocal<Object> NewInstance(Local<Value> arg1, Local<Value> arg2);
     
     BoxRect getCropbox();
-    MaybeLocal<Object> getImageBuffer(double width, double height, kImageType type);
+    char* getImageBuffer(double width, double height, kImageType type, long *buffSize);
     
     PDFDocumentWrapper *_document = NULL;
     unsigned int _pageIndex = 0;
