@@ -7,7 +7,6 @@
 //
 
 #include "pdf_utils.h"
-#include "os.h"
 
 #if defined(IS_MACOSX)
 
