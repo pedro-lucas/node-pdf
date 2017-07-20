@@ -7,6 +7,9 @@
 //
 
 #include "pdf_utils.h"
+#include "os.h"
+
+#if defined(IS_MACOSX)
 
 int PDFPageGetRotation(CGPDFPageRef page) {
     int rotationAngle = CGPDFPageGetRotationAngle(page);
@@ -104,3 +107,5 @@ CGImageRef CreatePDFPageImage(CGPDFPageRef page, CGSize scaledSize, bool transpa
     
     return pdfImage;
 }
+
+#endif

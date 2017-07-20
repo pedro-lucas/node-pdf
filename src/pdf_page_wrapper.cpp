@@ -22,12 +22,12 @@ public:
     void HandleOKCallback () {
         if(callback != NULL) {
             Local<Value> argv[2];
-            if(resultSize == 0) {
+            if(buff == NULL || resultSize == 0) {
                 argv[0] = Nan::Error("Internal module error");
                 argv[1] = Nan::Null();
             }else{
                 argv[0] = Nan::Null();
-                argv[1] = Nan::NewBuffer(buff, resultSize).ToLocalChecked();
+                argv[1] = Nan::NewBuffer(buff, (uint32_t)resultSize).ToLocalChecked();
             }
             callback->Call(2, argv);
         }
@@ -95,6 +95,7 @@ PDFPageWrapper::PDFPageWrapper(PDFDocumentWrapper *document, unsigned int pageIn
 
 char* PDFPageWrapper::getImageBuffer(double width, double height, kImageType type, long *buffSize) {
     
+#if defined(IS_MACOSX)
     CGImageRef image = CreatePDFPageImage(CGPDFDocumentGetPage(_document->_pdf, _pageIndex), CGSizeMake(width, height), true);
     
     if(image == NULL) {
@@ -121,13 +122,21 @@ char* PDFPageWrapper::getImageBuffer(double width, double height, kImageType typ
     CFRelease(data);
         
     return (char*)buffer;
+#else
+    *buffSize = 0;
+    return NULL;
+#endif
     
 }
 
 BoxRect PDFPageWrapper::getCropbox() {
+#if defined(IS_MACOSX)
     CGPDFPageRef page = CGPDFDocumentGetPage(_document->_pdf, _pageIndex);
     CGRect rect = CGPDFPageGetBoxRect(page, kCGPDFCropBox);
     return {{rect.origin.x, rect.origin.y}, {rect.size.width, rect.size.height}};
+#else
+    return {{0,0}, {0,0}};
+#endif
 }
 
 
@@ -207,11 +216,11 @@ NAN_METHOD(PDFPageWrapper::GetImageBufferSync) {
     long length = 0;
     char *buff = obj->getImageBuffer(size.width, size.height, type, &length);
     
-    if(buff == NULL) {
+    if(buff == NULL || length == 0) {
         Nan::ThrowError("Internal module error");
         return;
     }
     
-    info.GetReturnValue().Set(Nan::NewBuffer(buff, length).ToLocalChecked());
+    info.GetReturnValue().Set(Nan::NewBuffer(buff, (uint32_t)length).ToLocalChecked());
     
 }

@@ -10,7 +10,11 @@
 #define node_pdf_page_hpp
 
 #include <nan.h>
-#include <ApplicationServices/ApplicationServices.h>
+#include "os.h"
+
+#if defined(IS_MACOSX)
+    #include <ApplicationServices/ApplicationServices.h>
+#endif
 
 using namespace v8;
 using namespace std;

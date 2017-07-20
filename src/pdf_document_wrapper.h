@@ -10,7 +10,11 @@
 #define NODE_PDF_MAIN_INCLUDED
 
 #include <nan.h>
+#include "os.h"
+
+#if defined(IS_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#endif
 
 class PDFDocumentWrapper : public Nan::ObjectWrap {
     
@@ -21,11 +25,16 @@ public:
     unsigned int count();
     std::string _path;
     
+#if defined(IS_MACOSX)
+    
     /* Document pointer
      *
      */
     CGPDFDocumentRef _pdf = NULL;
-
+#else
+     void* _pdf = NULL;
+#endif
+    
 private:
     
     explicit PDFDocumentWrapper(std::string path = "");

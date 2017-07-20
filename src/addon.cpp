@@ -13,8 +13,7 @@
 using namespace v8;
 
 void Check(const Nan::FunctionCallbackInfo<Value>& info) {
-    Isolate* isolate = info.GetIsolate();
-    info.GetReturnValue().Set(String::NewFromUtf8(isolate, "Everything working right!"));
+    info.GetReturnValue().Set(Nan::New("Everything working right!").ToLocalChecked());
 }
 
 void Init(Local<Object> exports) {

@@ -21,7 +21,11 @@ Nan::Persistent<v8::Function> PDFDocumentWrapper::constructor;
 
 PDFDocumentWrapper::~PDFDocumentWrapper() {
     if(_pdf) {
+#if defined(IS_MACOSX)
         CGPDFDocumentRelease(_pdf);
+#else
+        delete _pdf;
+#endif
     }
 }
 
@@ -31,6 +35,8 @@ PDFDocumentWrapper::PDFDocumentWrapper(std::string path) {
     
     if(!file_exists(_path)) return;
     
+#if defined(IS_MACOSX)
+    
     CFStringRef filePath = CFStringCreateWithCString(NULL, _path.c_str(), kCFStringEncodingUTF8);
     CFURLRef url = CFURLCreateWithFileSystemPath(NULL, filePath, kCFURLPOSIXPathStyle, true);
     
@@ -38,10 +44,16 @@ PDFDocumentWrapper::PDFDocumentWrapper(std::string path) {
     
     _pdf = CGPDFDocumentCreateWithURL(url);
     
+#endif
+    
 }
 
 unsigned int PDFDocumentWrapper::count() {
+#if defined(IS_MACOSX)
     return (unsigned int)CGPDFDocumentGetNumberOfPages(_pdf);
+#else
+    return 0;
+#endif
 }
 
 NAN_MODULE_INIT(PDFDocumentWrapper::Init) {
